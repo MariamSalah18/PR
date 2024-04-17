@@ -61,16 +61,33 @@ X['cityname'].fillna(X['cityname'].mode()[0], inplace=True)
 # Fill missing values in 'state' with mode
 X['state'].fillna(X['state'].mode()[0], inplace=True)
 
-# Define the default value to be assigned when no mode could be calculated
-default_value = "Unknown"
 
-# Calculate mode address for each cityname
-mode_address_by_city = X.groupby('cityname')['address'].transform(lambda x: x.mode().iloc[0] if not x.mode().empty else default_value)
+# Find cities with only one address
+cities_with_single_address = X.groupby('cityname')['address'].nunique()
+cities_with_single_address = cities_with_single_address[cities_with_single_address == 1]
 
-# Fill missing addresses based on mode address for each city
-X['address'].fillna(mode_address_by_city, inplace=True)
+# Define a function to fill missing addresses with mode addresses if available, otherwise with random addresses
+
+default_value="unknown"
+def fill_mode(x):
+    if not x.mode().empty:
+        return x.mode().iloc[0]  # Use mode if available
+    else:
+       return default_value
+
+# Apply the function to fill missing addresses based on mode addresses or single addresses for each city
+
+X['address'] = X.groupby('cityname')['address'].transform(fill_mode)
 
 X['longitude'] = X['longitude'].abs()
 X['longitude'].fillna(X['longitude'].mean(), inplace=True)
 X['latitude'].fillna(X['latitude'].mean(), inplace=True)
-print(X.isna().sum())
+
+# Identify columns with object data type
+categorical_columns = X.select_dtypes(include=['object']).columns
+# Initialize LabelEncoder
+label_encoder = LabelEncoder()
+
+# Apply label encoding to each categorical column
+for column in categorical_columns:
+    X[column] = label_encoder.fit_transform(X[column])
