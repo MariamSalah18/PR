@@ -1,14 +1,18 @@
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 import random
 import matplotlib.pyplot as plt
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
-import seaborn as sns
 from itertools import combinations
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
+from scipy import stats
 
 df = pd.read_csv('ApartmentRentPrediction.csv')
 X = df.drop(columns=['price_display'])
@@ -91,3 +95,62 @@ label_encoder = LabelEncoder()
 # Apply label encoding to each categorical column
 for column in categorical_columns:
     X[column] = label_encoder.fit_transform(X[column])
+
+
+def remove_outliers(df):
+    # Calculate z-scores for each value in the DataFrame
+    z_scores = np.abs(stats.zscore(df))
+
+    # Define a threshold to identify outliers
+    threshold = 3
+
+    # Create a boolean mask of outliers for each column
+    outlier_mask = (z_scores > threshold).any(axis=1)
+
+    # Remove rows containing outliers
+    df_clean = df[~outlier_mask]
+
+    return df_clean
+
+X_no_outliers = remove_outliers(X)
+
+scaler = MinMaxScaler()
+
+columns_to_normalize = ['category', 'amenities', 'bathrooms','bedrooms'
+    ,'has_photo','pets_allowed','price','square_feet','address','cityname','state','latitude','longitude','source']
+
+for column in columns_to_normalize:
+    column_values = X_no_outliers[column].values.reshape(-1, 1)
+    normalized_values = scaler.fit_transform(column_values)
+    X_no_outliers[column] = normalized_values
+
+columns_to_standardize = ['title','body']
+scaler = StandardScaler()
+X_no_outliers[columns_to_standardize] = scaler.fit_transform(X_no_outliers[columns_to_standardize])
+
+
+
+
+
+'''preprocessed_file_path = 'preprocessed_data.xlsx'
+X_no_outliers.to_excel(preprocessed_file_path, index=False)
+print("Preprocessed data exported to:", preprocessed_file_path)'''
+
+'''sns.boxplot(X['price'])
+plt.ylim(0, 50)
+plt.show()
+ preprocessed_file_path = 'preprocessed_data.xlsx'
+X.to_excel(preprocessed_file_path, index=False)
+print("Preprocessed data exported to:", preprocessed_file_path)
+
+# Plot histograms for numerical columns
+numerical_columns = X.select_dtypes(include=['int64', 'float64']).columns"
+#for column in numerical_columns:
+ #   plt.figure(figsize=(8, 6))
+  #  plt.hist(X[column], bins=20, color='skyblue', edgecolor='black')
+   # plt.title(f'Histogram of {column}')
+    #plt.xlabel(column)
+    #plt.ylabel('Frequency')
+    #plt.grid(True)
+   # plt.show()'''
+
