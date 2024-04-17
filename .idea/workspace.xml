@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="693d45d9-d7ff-41fe-9376-4925f40c5201" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    <list default="true" id="693d45d9-d7ff-41fe-9376-4925f40c5201" name="Changes" comment="outliers and scaling">
+      <change afterPath="$PROJECT_DIR$/report.docx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,6 +67,18 @@
       <option name="presentableId" value="Default" />
       <updated>1713297034520</updated>
     </task>
+    <task id="LOCAL-00001" summary="outliers and scaling">
+      <created>1713382817635</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1713382817635</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="outliers and scaling" />
+    <option name="LAST_COMMIT_MESSAGE" value="outliers and scaling" />
   </component>
 </project>
