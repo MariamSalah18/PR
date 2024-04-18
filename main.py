@@ -13,6 +13,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
+from datetime import datetime
 
 df = pd.read_csv('ApartmentRentPrediction.csv')
 X = df.drop(columns=['price_display'])
@@ -26,6 +27,17 @@ def set_category(text):
     else:
         return 'housing'
 X['category'] = X['body'].apply(set_category)
+
+
+X['source'] = X['source'].apply(lambda x: x + '.com' if not x.endswith('.com') else x)
+
+# Convert each timestamp to datetime
+X['time'] = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in X['time']]
+
+# Print the formatted times
+for time in X['time']:
+    print(time)
+
 
 X['bathrooms'].replace([np.inf, -np.inf], 1, inplace=True)
 
@@ -83,7 +95,6 @@ def fill_mode(x):
 
 X['address'] = X.groupby('cityname')['address'].transform(fill_mode)
 
-X['longitude'] = X['longitude'].abs()
 X['longitude'].fillna(X['longitude'].mean(), inplace=True)
 X['latitude'].fillna(X['latitude'].mean(), inplace=True)
 
