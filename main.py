@@ -14,6 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
 from datetime import datetime
+from geopy.geocoders import Nominatim
 
 df = pd.read_csv('ApartmentRentPrediction.csv')
 X = df.drop(columns=['price_display'])
@@ -98,6 +99,34 @@ X['address'] = X.groupby('cityname')['address'].transform(fill_mode)
 X['longitude'].fillna(X['longitude'].mean(), inplace=True)
 X['latitude'].fillna(X['latitude'].mean(), inplace=True)
 
+# Batch size for processing
+batch_size = 1000
+
+# Split the DataFrame into batches
+batches = [X.iloc[i:i+batch_size] for i in range(0, len(X), batch_size)]
+
+# Initialize Nominatim geocoder (OSM)
+geolocator = Nominatim(user_agent="my_geocoder")
+
+''''# Reverse geocoding function
+def get_locations(df):
+    locations = []
+    for _, row in df.iterrows():
+        try:
+            location = geolocator.reverse((row['latitude'], row['longitude']), language='en', timeout=10)
+            locations.append(location.address if location else "Unknown")
+        except Exception as e:
+            print(f"Error: {e}")
+            locations.append("Unknown")
+    return locations
+
+# Create a new 'location' feature in X
+X['location'] = sum([get_locations(batch) for batch in batches], [])
+
+# Print the DataFrame with the new 'location' column
+print(X[['longitude', 'latitude', 'location']])'''
+
+
 # Identify columns with object data type
 categorical_columns = X.select_dtypes(include=['object']).columns
 # Initialize LabelEncoder
@@ -108,22 +137,28 @@ for column in categorical_columns:
     X[column] = label_encoder.fit_transform(X[column])
 
 
-def remove_outliers(df):
-    # Calculate z-scores for each value in the DataFrame
+
+def replace_outliers_with_mean(df):
     z_scores = np.abs(stats.zscore(df))
-
-    # Define a threshold to identify outliers
     threshold = 3
+    is_outlier = z_scores > threshold
+    column_means = df.mean()
+    df_no_outliers = df.mask(is_outlier, column_means, axis=1)
+    return df_no_outliers
 
-    # Create a boolean mask of outliers for each column
-    outlier_mask = (z_scores > threshold).any(axis=1)
+# Remove non-numeric characters and convert to integers
+Y = Y.str.replace('[^\d]', '', regex=True).astype(int)
 
-    # Remove rows containing outliers
-    df_clean = df[~outlier_mask]
+# Concatenate data
+data = pd.concat([X, Y], axis=1)
 
-    return df_clean
+# Replace outliers
+data_no_outliers = replace_outliers_with_mean(data)
 
-X_no_outliers = remove_outliers(X)
+# Split data with replaced outliers
+X_no_outliers = data_no_outliers.drop(columns=['price_display'])
+Y_no_outliers = data_no_outliers['price_display']
+
 
 scaler = MinMaxScaler()
 
@@ -165,3 +200,22 @@ numerical_columns = X.select_dtypes(include=['int64', 'float64']).columns"
     #plt.grid(True)
    # plt.show()'''
 
+
+# Drop some columns
+columns_to_drop = ['body', 'price', 'id', 'currency', 'fee', 'price_type']
+data_no_outliers.drop(columns=columns_to_drop, inplace=True)
+
+# Calculate correlation matrix
+corr_matrix = data_no_outliers.corr()
+
+# Features selection
+top_feature = corr_matrix.index[abs(corr_matrix['price_display']) >= 0.1]
+top_feature = top_feature.delete(-1)
+X_no_outliers = X_no_outliers[top_feature]
+print(top_feature)
+
+# Plot heatmap
+plt.figure(figsize=(15, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.show()
