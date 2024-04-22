@@ -13,6 +13,13 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
+from datetime import datetime
+from geopy.geocoders import Nominatim
+from sklearn import linear_model
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import r2_score, mean_squared_error
 
 df = pd.read_csv('ApartmentRentPrediction.csv')
 X = df.drop(columns=['price_display'])
@@ -26,6 +33,17 @@ def set_category(text):
     else:
         return 'housing'
 X['category'] = X['body'].apply(set_category)
+
+
+X['source'] = X['source'].apply(lambda x: x + '.com' if not x.endswith('.com') else x)
+
+# Convert each timestamp to datetime
+X['time'] = [datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') for ts in X['time']]
+
+# Print the formatted times
+for time in X['time']:
+    print(time)
+
 
 X['bathrooms'].replace([np.inf, -np.inf], 1, inplace=True)
 
@@ -83,9 +101,36 @@ def fill_mode(x):
 
 X['address'] = X.groupby('cityname')['address'].transform(fill_mode)
 
-X['longitude'] = X['longitude'].abs()
 X['longitude'].fillna(X['longitude'].mean(), inplace=True)
 X['latitude'].fillna(X['latitude'].mean(), inplace=True)
+
+# Batch size for processing
+batch_size = 1000
+
+# Split the DataFrame into batches
+batches = [X.iloc[i:i+batch_size] for i in range(0, len(X), batch_size)]
+
+# Initialize Nominatim geocoder (OSM)
+geolocator = Nominatim(user_agent="my_geocoder")
+
+''''# Reverse geocoding function
+def get_locations(df):
+    locations = []
+    for _, row in df.iterrows():
+        try:
+            location = geolocator.reverse((row['latitude'], row['longitude']), language='en', timeout=10)
+            locations.append(location.address if location else "Unknown")
+        except Exception as e:
+            print(f"Error: {e}")
+            locations.append("Unknown")
+    return locations
+
+# Create a new 'location' feature in X
+X['location'] = sum([get_locations(batch) for batch in batches], [])
+
+# Print the DataFrame with the new 'location' column
+print(X[['longitude', 'latitude', 'location']])'''
+
 
 # Identify columns with object data type
 categorical_columns = X.select_dtypes(include=['object']).columns
@@ -97,22 +142,28 @@ for column in categorical_columns:
     X[column] = label_encoder.fit_transform(X[column])
 
 
-def remove_outliers(df):
-    # Calculate z-scores for each value in the DataFrame
+
+def replace_outliers_with_mean(df):
     z_scores = np.abs(stats.zscore(df))
-
-    # Define a threshold to identify outliers
     threshold = 3
+    is_outlier = z_scores > threshold
+    column_means = df.mean()
+    df_no_outliers = df.mask(is_outlier, column_means, axis=1)
+    return df_no_outliers
 
-    # Create a boolean mask of outliers for each column
-    outlier_mask = (z_scores > threshold).any(axis=1)
+# Remove non-numeric characters and convert to integers
+Y = Y.str.replace('[^\d]', '', regex=True).astype(int)
 
-    # Remove rows containing outliers
-    df_clean = df[~outlier_mask]
+# Concatenate data
+data = pd.concat([X, Y], axis=1)
 
-    return df_clean
+# Replace outliers
+data_no_outliers = replace_outliers_with_mean(data)
 
-X_no_outliers = remove_outliers(X)
+# Split data with replaced outliers
+X_no_outliers = data_no_outliers.drop(columns=['price_display'])
+Y_no_outliers = data_no_outliers['price_display']
+
 
 scaler = MinMaxScaler()
 
@@ -154,3 +205,50 @@ numerical_columns = X.select_dtypes(include=['int64', 'float64']).columns"
     #plt.grid(True)
    # plt.show()'''
 
+
+# Drop some columns
+columns_to_drop = ['body', 'price', 'id', 'currency', 'fee', 'price_type']
+data_no_outliers.drop(columns=columns_to_drop, inplace=True)
+
+# Calculate correlation matrix
+corr_matrix = data_no_outliers.corr()
+
+# Features selection
+top_feature = corr_matrix.index[abs(corr_matrix['price_display']) >= 0.1]
+top_feature = top_feature.delete(-1)
+X_no_outliers = X_no_outliers[top_feature]
+print(top_feature)
+
+# Plot heatmap
+plt.figure(figsize=(15, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.show()
+
+#Split the data to training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.30,shuffle=True,random_state=10)
+
+#X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size = 0.50,shuffle=True)
+
+poly_features = PolynomialFeatures(degree=2)
+
+# transforms the existing features to higher degree features.
+X_train_poly = poly_features.fit_transform(X_train)
+
+# fit the transformed features to Linear Regression
+poly_model = linear_model.LinearRegression()
+poly_model.fit(X_train_poly, y_train)
+
+# predicting on training data-set
+y_train_predicted = poly_model.predict(X_train_poly)
+ypred=poly_model.predict(poly_features.transform(X_test))
+
+# predicting on test data-set
+prediction = poly_model.predict(poly_features.fit_transform(X_test))
+
+# Mean Squared Error
+print('Mean Square Error', metrics.mean_squared_error(y_test, prediction))
+
+# Calculate R-squared score
+r2 = r2_score(y_test, prediction)
+print('R2 score:', r2)
