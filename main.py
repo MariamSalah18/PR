@@ -15,6 +15,11 @@ from sklearn.preprocessing import StandardScaler
 from scipy import stats
 from datetime import datetime
 from geopy.geocoders import Nominatim
+from sklearn import linear_model
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import r2_score, mean_squared_error
 
 df = pd.read_csv('ApartmentRentPrediction.csv')
 X = df.drop(columns=['price_display'])
@@ -219,3 +224,31 @@ plt.figure(figsize=(15, 8))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title('Correlation Heatmap')
 plt.show()
+
+#Split the data to training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.30,shuffle=True,random_state=10)
+
+#X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size = 0.50,shuffle=True)
+
+poly_features = PolynomialFeatures(degree=2)
+
+# transforms the existing features to higher degree features.
+X_train_poly = poly_features.fit_transform(X_train)
+
+# fit the transformed features to Linear Regression
+poly_model = linear_model.LinearRegression()
+poly_model.fit(X_train_poly, y_train)
+
+# predicting on training data-set
+y_train_predicted = poly_model.predict(X_train_poly)
+ypred=poly_model.predict(poly_features.transform(X_test))
+
+# predicting on test data-set
+prediction = poly_model.predict(poly_features.fit_transform(X_test))
+
+# Mean Squared Error
+print('Mean Square Error', metrics.mean_squared_error(y_test, prediction))
+
+# Calculate R-squared score
+r2 = r2_score(y_test, prediction)
+print('R2 score:', r2)
