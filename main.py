@@ -20,7 +20,7 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import r2_score, mean_squared_error
-
+from sklearn.ensemble import RandomForestRegressor
 
 df = pd.read_csv('ApartmentRentPrediction.csv')
 X = df.drop(columns=['price_display'])
@@ -49,17 +49,25 @@ for time in X['time']:
 X['bathrooms'].replace([np.inf, -np.inf], 1, inplace=True)
 
 # Fill NaN values in 'bathrooms' based on 'category'
-X.loc[X['category'] == 'rent', 'bathrooms'] = X.loc[X['category'] == 'rent', 'bathrooms'].fillna(1)
-X.loc[X['category'] == 'apartment', 'bathrooms'] = X.loc[X['category'] == 'apartment', 'bathrooms'].fillna(2)
-X.loc[X['category'] == 'housing', 'bathrooms'] = X.loc[X['category'] == 'housing', 'bathrooms'].fillna(3)
-
-
+# X.loc[X['category'] == 'rent', 'bathrooms'] = X.loc[X['category'] == 'rent', 'bathrooms'].fillna(1)
+# X.loc[X['category'] == 'apartment', 'bathrooms'] = X.loc[X['category'] == 'apartment', 'bathrooms'].fillna(2)
+# X.loc[X['category'] == 'housing', 'bathrooms'] = X.loc[X['category'] == 'housing', 'bathrooms'].fillna(3)
 
 X['bathrooms'].replace(0, 1, inplace=True)
+# Fill missing values with the mode
+X['bathrooms'] = X['bathrooms'].fillna(X['bathrooms'].mode()[0])
+# Convert to integer
+X['bathrooms'] = X['bathrooms'].astype(int)
+
+X['bedrooms'].replace(0, 1, inplace=True)
+# Fill missing values with the mode
+X['bedrooms'] = X['bedrooms'].fillna(X['bedrooms'].mode()[0])
+# Convert to integer
+X['bedrooms'] = X['bedrooms'].astype(int)
 # Fill NaN values in 'bathrooms' based on 'category'
-X.loc[X['category'] == 'rent', 'bedrooms'] = X.loc[X['category'] == 'rent', 'bedrooms'].fillna(1)
-X.loc[X['category'] == 'apartment', 'bedrooms'] = X.loc[X['category'] == 'apartment', 'bedrooms'].fillna(2)
-X.loc[X['category'] == 'housing', 'bedrooms'] = X.loc[X['category'] == 'housing', 'bedrooms'].fillna(3)
+# X.loc[X['category'] == 'rent', 'bedrooms'] = X.loc[X['category'] == 'rent', 'bedrooms'].fillna(1)
+# X.loc[X['category'] == 'apartment', 'bedrooms'] = X.loc[X['category'] == 'apartment', 'bedrooms'].fillna(2)
+# X.loc[X['category'] == 'housing', 'bedrooms'] = X.loc[X['category'] == 'housing', 'bedrooms'].fillna(3)
 
 '''X.loc[X['category'] == 'rent', 'amenities'].fillna(X['amenities'].mean(),inplace=True)
 X.loc[X['category'] == 'apartment', 'amenities'].fillna(X['amenities'].mean(),inplace=True)
@@ -86,8 +94,8 @@ X['state'].fillna(X['state'].mode()[0], inplace=True)
 
 
 # Find cities with only one address
-cities_with_single_address = X.groupby('cityname')['address'].nunique()
-cities_with_single_address = cities_with_single_address[cities_with_single_address == 1]
+# cities_with_single_address = X.groupby('cityname')['address'].nunique()
+# cities_with_single_address = cities_with_single_address[cities_with_single_address == 1]
 
 # Define a function to fill missing addresses with mode addresses if available, otherwise with random addresses
 
@@ -264,3 +272,19 @@ print('Mean Square Error Polynomial', metrics.mean_squared_error(y_test, predict
 # Calculate R-squared score
 r2 = r2_score(y_test, prediction)
 print('R2 score polynomial:', r2*100,'%')
+
+
+#Random Forest Regresson
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+# Fit the model to the training data
+rf_model.fit(X_train_poly, y_train)
+# Predict on the test set
+rf_prediction = rf_model.predict(poly_features.transform(X_test))
+# Calculate Mean Squared Error for Test Set
+rf_test_mse = mean_squared_error(y_test, rf_prediction)
+print("Random Forest Mean Squared Error (MSE) - Test:", rf_test_mse)
+
+# Calculate R-squared score
+rf_r2 = r2_score(y_test, rf_prediction)
+print('Random Forest R2 score:', rf_r2*100,'%')
+
