@@ -232,10 +232,13 @@ X_train, X_test, Y_train, Y_test = train_test_split(X_new, Y, test_size= 0.3, sh
 model = linear_model.LinearRegression()
 model.fit(X_train, Y_train)
 prediction = model.predict(X_test)
-print('Mean Square Error', metrics.mean_squared_error(Y_test, prediction))
+print('Mean Square Error Linear', metrics.mean_squared_error(Y_test, prediction))
+# Calculate R-squared score
+r2 = r2_score(Y_test, prediction)
+print('R2 score linear:', r2*100,'%')
 
 #Polynomial Regression
-X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.30,shuffle=True,random_state=10)
+X_train, X_test, y_train, y_test = train_test_split(X_no_outliers, Y, test_size = 0.30,shuffle=True,random_state=50)
 poly_features = PolynomialFeatures(degree=2)
 
 # transforms the existing features to higher degree features.
@@ -253,8 +256,8 @@ ypred=poly_model.predict(poly_features.transform(X_test))
 prediction = poly_model.predict(poly_features.fit_transform(X_test))
 
 # Mean Squared Error
-print('Mean Square Error', metrics.mean_squared_error(y_test, prediction))
+print('Mean Square Error Polynomial', metrics.mean_squared_error(y_test, prediction))
 
 # Calculate R-squared score
 r2 = r2_score(y_test, prediction)
-print('R2 score:', r2)
+print('R2 score polynomial:', r2*100,'%')
