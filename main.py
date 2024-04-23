@@ -21,6 +21,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import r2_score, mean_squared_error
 
+
 df = pd.read_csv('ApartmentRentPrediction.csv')
 X = df.drop(columns=['price_display'])
 Y= df['price_display']
@@ -168,7 +169,7 @@ Y_no_outliers = data_no_outliers['price_display']
 scaler = MinMaxScaler()
 
 columns_to_normalize = ['category', 'amenities', 'bathrooms','bedrooms'
-    ,'has_photo','pets_allowed','price','square_feet','address','cityname','state','latitude','longitude','source']
+    ,'has_photo','pets_allowed','price','square_feet','address','cityname','state','latitude','longitude','source','time']
 
 for column in columns_to_normalize:
     column_values = X_no_outliers[column].values.reshape(-1, 1)
@@ -209,17 +210,19 @@ numerical_columns = X.select_dtypes(include=['int64', 'float64']).columns"
 # Drop some columns
 columns_to_drop = ['body', 'price', 'id', 'currency', 'fee', 'price_type']
 data_no_outliers.drop(columns=columns_to_drop, inplace=True)
+X_no_outliers.drop(columns=columns_to_drop, inplace=True)
+print(X_no_outliers)
 
 # Calculate correlation matrix
 corr_matrix = data_no_outliers.corr()
 
 # Features selection
-top_feature = corr_matrix.index[abs(corr_matrix['price_display']) >= 0.1]
-top_feature = top_feature.delete(-1)
-X_new = X_no_outliers[top_feature]
-X_new['latitude'] = X_no_outliers['latitude']
-X_new['amenities'] = X_no_outliers['amenities']
-print(X_new)
+# top_feature = corr_matrix.index[abs(corr_matrix['price_display']) >= 0.1]
+# top_feature = top_feature.delete(-1)
+# X_new = X_no_outliers[top_feature]
+# X_new['latitude'] = X_no_outliers['latitude']
+# X_new['amenities'] = X_no_outliers['amenities']
+# print(X_new)
 
 # Plot heatmap
 plt.figure(figsize=(15, 8))
@@ -228,7 +231,7 @@ plt.title('Correlation Heatmap')
 plt.show()
 
 #Linear Regression
-X_train, X_test, Y_train, Y_test = train_test_split(X_new, Y, test_size= 0.3, shuffle=True, random_state= 50)
+X_train, X_test, Y_train, Y_test = train_test_split(X_no_outliers, Y_no_outliers, test_size= 0.3, shuffle=True, random_state= 10)
 model = linear_model.LinearRegression()
 model.fit(X_train, Y_train)
 prediction = model.predict(X_test)
@@ -238,7 +241,7 @@ r2 = r2_score(Y_test, prediction)
 print('R2 score linear:', r2*100,'%')
 
 #Polynomial Regression
-X_train, X_test, y_train, y_test = train_test_split(X_no_outliers, Y, test_size = 0.30,shuffle=True,random_state=50)
+X_train, X_test, y_train, y_test = train_test_split(X_no_outliers, Y_no_outliers, test_size = 0.30,shuffle=True,random_state=10)
 poly_features = PolynomialFeatures(degree=2)
 
 # transforms the existing features to higher degree features.
