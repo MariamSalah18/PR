@@ -227,18 +227,15 @@ sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title('Correlation Heatmap')
 plt.show()
 
-#Split the data to training and testing sets
-<<<<<<< HEAD
+#Linear Regression
 X_train, X_test, Y_train, Y_test = train_test_split(X_new, Y, test_size= 0.3, shuffle=True, random_state= 50)
 model = linear_model.LinearRegression()
 model.fit(X_train, Y_train)
 prediction = model.predict(X_test)
 print('Mean Square Error', metrics.mean_squared_error(Y_test, prediction))
-=======
+
+#Polynomial Regression
 X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.30,shuffle=True,random_state=10)
-
-#X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size = 0.50,shuffle=True)
-
 poly_features = PolynomialFeatures(degree=2)
 
 # transforms the existing features to higher degree features.
@@ -261,4 +258,3 @@ print('Mean Square Error', metrics.mean_squared_error(y_test, prediction))
 # Calculate R-squared score
 r2 = r2_score(y_test, prediction)
 print('R2 score:', r2)
->>>>>>> 10222d22de4863e418fc521a518f548c5cc392ff
