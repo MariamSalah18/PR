@@ -211,11 +211,20 @@ corr_matrix = data_no_outliers.corr()
 # Features selection
 top_feature = corr_matrix.index[abs(corr_matrix['price_display']) >= 0.1]
 top_feature = top_feature.delete(-1)
-X_no_outliers = X_no_outliers[top_feature]
-print(top_feature)
+X_new = X_no_outliers[top_feature]
+X_new['latitude'] = X_no_outliers['latitude']
+X_new['amenities'] = X_no_outliers['amenities']
+print(X_new)
 
 # Plot heatmap
 plt.figure(figsize=(15, 8))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title('Correlation Heatmap')
 plt.show()
+
+#Split the data to training and testing sets
+X_train, X_test, Y_train, Y_test = train_test_split(X_new, Y, test_size= 0.3, shuffle=True, random_state= 50)
+model = linear_model.LinearRegression()
+model.fit(X_train, Y_train)
+prediction = model.predict(X_test)
+print('Mean Square Error', metrics.mean_squared_error(Y_test, prediction))
