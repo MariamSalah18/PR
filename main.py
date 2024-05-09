@@ -13,8 +13,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.ensemble import StackingClassifier
-from sklearn.linear_model import LogisticRegression
+import pickle
 from sklearn.metrics import accuracy_score
+from sklearn.neighbors import KNeighborsClassifier
 
 df = pd.read_csv('ApartmentRentPrediction_Milestone2.csv')
 X = df.drop(columns=['RentCategory'])
@@ -176,106 +177,83 @@ selected_features = ['bathrooms', 'bedrooms', 'square_feet', 'latitude', 'longit
 X_train=X_train[selected_features]
 X_test=X_test[selected_features]
 
+# Train and save Decision Tree Classifier
+dt_classifier = DecisionTreeClassifier(max_depth=7, criterion='gini')
+dt_classifier.fit(X_train, y_train)
+dt_predictions = dt_classifier.predict(X_test)
+dt_accuracy = accuracy_score(y_test, dt_predictions)
+print("Decision Tree Classifier Accuracy:", dt_accuracy * 100)
 
-# 1. Decision Tree Classifier
-# Decision Tree Classifier with different hyperparameters
-dt_classifier_1 = DecisionTreeClassifier(max_depth=3,criterion='gini')
-dt_classifier_2 = DecisionTreeClassifier(max_depth=5,criterion='entropy')
-dt_classifier_3 = DecisionTreeClassifier(max_depth=7,criterion='gini')
+# Save Decision Tree Classifier
+with open('dt_classifier.pkl', 'wb') as f:
+    pickle.dump(dt_classifier, f)
 
-# Train each Decision Tree classifier
-dt_classifier_1.fit(X_train, y_train)
-dt_classifier_2.fit(X_train, y_train)
-dt_classifier_3.fit(X_train, y_train)
+# Train and save Gradient Boosting Classifier
+gbm_classifier = GradientBoostingClassifier(n_estimators=150, learning_rate=0.1)
+gbm_classifier.fit(X_train, y_train)
+gbm_predictions = gbm_classifier.predict(X_test)
+gbm_accuracy = accuracy_score(y_test, gbm_predictions)
+print("Gradient Boosting Classifier Accuracy:", gbm_accuracy * 100)
 
-# Predictions for each classifier
-dt_predictions_1 = dt_classifier_1.predict(X_test)
-dt_predictions_2 = dt_classifier_2.predict(X_test)
-dt_predictions_3 = dt_classifier_3.predict(X_test)
+# Save Gradient Boosting Classifier
+with open('gbm_classifier.pkl', 'wb') as f:
+    pickle.dump(gbm_classifier, f)
 
-# Calculate accuracy for each classifier
-dt_accuracy_1 = accuracy_score(y_test, dt_predictions_1)
-dt_accuracy_2 = accuracy_score(y_test, dt_predictions_2)
-dt_accuracy_3 = accuracy_score(y_test, dt_predictions_3)
+# Train and save Support Vector Machine Classifier
+svm_classifier = SVC(kernel='rbf', gamma=0.8, C=0.5)
+svm_classifier.fit(X_train, y_train)
+svm_predictions = svm_classifier.predict(X_test)
+svm_accuracy = accuracy_score(y_test, svm_predictions)
+print("Support Vector Machine (SVM) Classifier Accuracy:", svm_accuracy * 100)
 
-# Print accuracies
-print("Decision Tree Classifier 1 Accuracy:", dt_accuracy_1 * 100)
-print("Decision Tree Classifier 2 Accuracy:", dt_accuracy_2 * 100)
-print("Decision Tree Classifier 3 Accuracy:", dt_accuracy_3 * 100)
-print("---------------------------------------------------------------------------------------")
-
- # 2. Gradient Boosting Classifier
-# Gradient Boosting (GBM) Classifier with different hyperparameters
-gbm_classifier_1 = GradientBoostingClassifier(n_estimators= 150, learning_rate= 0.1)
-gbm_classifier_2 = GradientBoostingClassifier(n_estimators= 250, learning_rate= 0.02)
-gbm_classifier_3 = GradientBoostingClassifier(n_estimators= 300, learning_rate= 0.03)
-
-# Train each GBM classifier
-gbm_classifier_1.fit(X_train, y_train)
-gbm_classifier_2.fit(X_train, y_train)
-gbm_classifier_3.fit(X_train, y_train)
-
-# Predictions for each classifier
-gbm_predictions_1 = gbm_classifier_1.predict(X_test)
-gbm_predictions_2 = gbm_classifier_2.predict(X_test)
-gbm_predictions_3 = gbm_classifier_3.predict(X_test)
-
-# Calculate accuracy for each classifier
-gbm_accuracy_1 = accuracy_score(y_test, gbm_predictions_1)
-gbm_accuracy_2 = accuracy_score(y_test, gbm_predictions_2)
-gbm_accuracy_3 = accuracy_score(y_test, gbm_predictions_3)
-
-# Print accuracies
-print("Gradient Boosting Classifier 1 Accuracy:", gbm_accuracy_1 * 100)
-print("Gradient Boosting Classifier 2 Accuracy:", gbm_accuracy_2 * 100)
-print("Gradient Boosting Classifier 3 Accuracy:", gbm_accuracy_3 * 100)
-print("---------------------------------------------------------------------------------------")
-
-# 3. Support Vector Machine (SVM) Classifier
-# Support Vector Machine (SVM) Classifier with different hyperparameters
-svm_classifier_1 = SVC(kernel='linear', C=1)
-svm_classifier_2 = SVC(kernel='rbf', gamma=0.8, C=0.5)
-svm_classifier_3 = SVC(kernel='poly', degree=4, C=1)
+# Save Support Vector Machine Classifier
+with open('svm_classifier.pkl', 'wb') as f:
+    pickle.dump(svm_classifier, f)
 
 
-# Train each SVM classifier
-svm_classifier_1.fit(X_train, y_train)
-svm_classifier_2.fit(X_train, y_train)
-svm_classifier_3.fit(X_train, y_train)
+# Load saved models
+with open('dt_classifier.pkl', 'rb') as f:
+    dt_classifier = pickle.load(f)
 
-# Predictions for each classifier
-svm_predictions_1 = svm_classifier_1.predict(X_test)
-svm_predictions_2 = svm_classifier_2.predict(X_test)
-svm_predictions_3 = svm_classifier_3.predict(X_test)
-# Calculate accuracy for each classifier
-svm_accuracy_1 = accuracy_score(y_test, svm_predictions_1)
-svm_accuracy_2 = accuracy_score(y_test, svm_predictions_2)
-svm_accuracy_3 = accuracy_score(y_test, svm_predictions_3)
+with open('gbm_classifier.pkl', 'rb') as f:
+    gbm_classifier = pickle.load(f)
 
-# Print accuracies
-print("Support Vector Machine (SVM) Classifier 1 Accuracy:", svm_accuracy_1 * 100)
-print("Support Vector Machine (SVM) Classifier 2 Accuracy:", svm_accuracy_2 * 100)
-print("Support Vector Machine (SVM) Classifier 3 Accuracy:", svm_accuracy_3 * 100)
-print("---------------------------------------------------------------------------------------")
+with open('svm_classifier.pkl', 'rb') as f:
+    svm_classifier = pickle.load(f)
+
+#
+# # Now you can use these models to make predictions on new data
+# # For example:
+# new_data_predictions_dt = dt_classifier.predict(new_data)
+# new_data_predictions_gbm = gbm_classifier.predict(new_data)
+# new_data_predictions_svm = svm_classifier.predict(new_data)
 
 # Define base models
 base_models = [
-    ('dt_1', DecisionTreeClassifier(max_depth=3, criterion='gini')),
-    ('dt_2', DecisionTreeClassifier(max_depth=5, criterion='entropy')),
-    ('dt_3', DecisionTreeClassifier(max_depth=7, criterion='gini')),
-    ('gbm_1', GradientBoostingClassifier(n_estimators=150, learning_rate=0.1)),
-    ('gbm_2', GradientBoostingClassifier(n_estimators=250, learning_rate=0.02)),
-    ('gbm_3', GradientBoostingClassifier(n_estimators=300, learning_rate=0.03)),
-    ('svm_1', SVC(kernel='linear', C=1)),
-    ('svm_2', SVC(kernel='rbf', gamma=0.8, C=0.5)),
-    ('svm_3', SVC(kernel='poly', degree=4, C=1))
+    ('dt', dt_classifier),
+    ('gbm', gbm_classifier),
+    ('svm', svm_classifier)
 ]
 
-# Initialize weighted voting ensemble
-weighted_voting_ensemble = VotingClassifier(estimators=base_models, voting='hard')
+# Calculate total accuracy
+total_accuracy = svm_accuracy + gbm_accuracy + dt_accuracy
+
+# Compute weights based on normalized accuracies
+weights = {
+    'svm': svm_accuracy / total_accuracy,
+    'gbm': gbm_accuracy / total_accuracy,
+    'dt': dt_accuracy / total_accuracy,
+}
+
+# Initialize weighted voting ensemble with weights
+weighted_voting_ensemble = VotingClassifier(estimators=base_models, voting='hard', weights=list(weights.values()))
 
 # Train weighted voting ensemble
 weighted_voting_ensemble.fit(X_train, y_train)
+
+# Save weighted voting ensemble
+with open('weighted_voting_ensemble.pkl', 'wb') as f:
+    pickle.dump(weighted_voting_ensemble, f)
 
 # Predictions from weighted voting ensemble
 weighted_voting_predictions = weighted_voting_ensemble.predict(X_test)
@@ -284,11 +262,18 @@ weighted_voting_predictions = weighted_voting_ensemble.predict(X_test)
 weighted_voting_accuracy = accuracy_score(y_test, weighted_voting_predictions)
 print("Weighted Voting Ensemble Accuracy:", weighted_voting_accuracy * 100)
 
-# Initialize weighted stacking ensemble
-stacking_ensemble = StackingClassifier(estimators=base_models)
+# Initialize weighted stacking ensemble with weights
+stacking_ensemble = StackingClassifier(estimators=base_models,
+                                       stack_method='auto',
+                                       passthrough=True,
+                                       final_estimator=KNeighborsClassifier())
 
 # Train stacking ensemble
 stacking_ensemble.fit(X_train, y_train)
+
+# Save stacking ensemble
+with open('stacking_ensemble.pkl', 'wb') as f:
+    pickle.dump(stacking_ensemble, f)
 
 # Predictions from stacking ensemble
 stacking_predictions = stacking_ensemble.predict(X_test)
@@ -297,35 +282,144 @@ stacking_predictions = stacking_ensemble.predict(X_test)
 stacking_accuracy = accuracy_score(y_test, stacking_predictions)
 print("Stacking Ensemble Accuracy:", stacking_accuracy * 100)
 
-# SVMmax=max(svm_accuracy_1,svm_accuracy_2,svm_accuracy_3)
-# gbnmax=max(gbm_accuracy_1,gbm_accuracy_2,gbm_accuracy_3)
-# DTmax=max(dt_accuracy_1,dt_accuracy_2,dt_accuracy_3)
+# Define base models
+base_models = [
+    ('dt', dt_classifier),
+    ('gbm', gbm_classifier),
+]
+
+
+# Calculate total accuracy
+total_accuracy = gbm_accuracy + dt_accuracy
+
+# Compute weights based on normalized accuracies
+weights = {
+    'gbm': gbm_accuracy / total_accuracy,
+    'dt': dt_accuracy / total_accuracy,
+}
+
+# Initialize weighted voting ensemble with weights
+weighted_voting_ensemble = VotingClassifier(estimators=base_models, voting='hard', weights=list(weights.values()))
+
+# Train weighted voting ensemble
+weighted_voting_ensemble.fit(X_train, y_train)
+
+# Save weighted voting ensemble
+with open('weighted_voting_ensemble_2.pkl', 'wb') as f:
+    pickle.dump(weighted_voting_ensemble, f)
+
+# Predictions from weighted voting ensemble
+weighted_voting_predictions = weighted_voting_ensemble.predict(X_test)
+
+
+# Calculate accuracy for weighted voting ensemble
+weighted_voting_accuracy = accuracy_score(y_test, weighted_voting_predictions)
+print("Weighted Voting Ensemble Accuracy :", weighted_voting_accuracy * 100)
+
+# Initialize weighted stacking ensemble with weights
+stacking_ensemble = StackingClassifier(estimators=base_models,
+                                       stack_method='auto',
+                                       passthrough=True,
+                                       final_estimator=KNeighborsClassifier())
+
+# Train stacking ensemble
+stacking_ensemble.fit(X_train, y_train)
+
+# Save stacking ensemble
+with open('stacking_ensemble_2.pkl', 'wb') as f:
+    pickle.dump(stacking_ensemble, f)
+
+# Predictions from stacking ensemble
+stacking_predictions = stacking_ensemble.predict(X_test)
+
+# Calculate accuracy for stacking ensemble
+stacking_accuracy = accuracy_score(y_test, stacking_predictions)
+print("Stacking Ensemble Accuracy:", stacking_accuracy * 100)
+
+# # 1. Decision Tree Classifier
+# # Decision Tree Classifier with different hyperparameters
+# dt_classifier_1 = DecisionTreeClassifier(max_depth=3,criterion='gini')
+# dt_classifier_2 = DecisionTreeClassifier(max_depth=5,criterion='entropy')
+# dt_classifier_3 = DecisionTreeClassifier(max_depth=7,criterion='gini')
+# #dt_classifier_3 = DecisionTreeClassifier(max_depth=7,criterion='gini')
 #
-# accuracies = [DTmax, gbnmax, SVMmax]
+# # Train each Decision Tree classifier
+# dt_classifier_1.fit(X_train, y_train)
+# dt_classifier_2.fit(X_train, y_train)
+# dt_classifier_3.fit(X_train, y_train)
 #
-# # Voting Approach
-# voting_clf = VotingClassifier(
-#     estimators=[
-#         ('dt_1', dt_classifier_1),
-#         ('dt_2', dt_classifier_2),
-#         ('dt_3', dt_classifier_3),
-#         ('gbm_1', gbm_classifier_1),
-#         ('gbm_2', gbm_classifier_2),
-#         ('gbm_3', gbm_classifier_3),
-#         ('svm_1', svm_classifier_1),
-#         ('svm_2', svm_classifier_2),
-#         ('svm_3', svm_classifier_3)
-#     ],
-#     voting='hard'  # Use majority voting
-# )
+# # Predictions for each classifier
+# dt_predictions_1 = dt_classifier_1.predict(X_test)
+# dt_predictions_2 = dt_classifier_2.predict(X_test)
+# dt_predictions_3 = dt_classifier_3.predict(X_test)
 #
-# voting_clf.fit(X_train, y_train)
-# voting_predictions = voting_clf.predict(X_test)
-# voting_accuracy = accuracy_score(y_test, voting_predictions)
-# print("Voting Classifier Accuracy:", voting_accuracy * 100)
+# # Calculate accuracy for each classifier
+# dt_accuracy_1 = accuracy_score(y_test, dt_predictions_1)
+# dt_accuracy_2 = accuracy_score(y_test, dt_predictions_2)
+# dt_accuracy_3 = accuracy_score(y_test, dt_predictions_3)
 #
-# # Stacking Approach
-# estimators = [
+# # Print accuracies
+# print("Decision Tree Classifier 1 Accuracy:", dt_accuracy_1 * 100)
+# print("Decision Tree Classifier 2 Accuracy:", dt_accuracy_2 * 100)
+# print("Decision Tree Classifier 3 Accuracy:", dt_accuracy_3 * 100)
+# print("---------------------------------------------------------------------------------------")
+#
+#  # 2. Gradient Boosting Classifier
+# # Gradient Boosting (GBM) Classifier with different hyperparameters
+# gbm_classifier_1 = GradientBoostingClassifier(n_estimators= 150, learning_rate= 0.1)
+# gbm_classifier_2 = GradientBoostingClassifier(n_estimators= 250, learning_rate= 0.02)
+# gbm_classifier_3 = GradientBoostingClassifier(n_estimators= 300, learning_rate= 0.03)
+# #gbm_classifier_1 = GradientBoostingClassifier(n_estimators= 150, learning_rate= 0.1)
+# # Train each GBM classifier
+# gbm_classifier_1.fit(X_train, y_train)
+# gbm_classifier_2.fit(X_train, y_train)
+# gbm_classifier_3.fit(X_train, y_train)
+#
+# # Predictions for each classifier
+# gbm_predictions_1 = gbm_classifier_1.predict(X_test)
+# gbm_predictions_2 = gbm_classifier_2.predict(X_test)
+# gbm_predictions_3 = gbm_classifier_3.predict(X_test)
+#
+# # Calculate accuracy for each classifier
+# gbm_accuracy_1 = accuracy_score(y_test, gbm_predictions_1)
+# gbm_accuracy_2 = accuracy_score(y_test, gbm_predictions_2)
+# gbm_accuracy_3 = accuracy_score(y_test, gbm_predictions_3)
+#
+# # Print accuracies
+# print("Gradient Boosting Classifier 1 Accuracy:", gbm_accuracy_1 * 100)
+# print("Gradient Boosting Classifier 2 Accuracy:", gbm_accuracy_2 * 100)
+# print("Gradient Boosting Classifier 3 Accuracy:", gbm_accuracy_3 * 100)
+# print("---------------------------------------------------------------------------------------")
+#
+# # 3. Support Vector Machine (SVM) Classifier
+# # Support Vector Machine (SVM) Classifier with different hyperparameters
+# svm_classifier_1 = SVC(kernel='linear', C=1)
+# svm_classifier_2 = SVC(kernel='rbf', gamma=0.8, C=0.5)
+# svm_classifier_3 = SVC(kernel='poly', degree=4, C=1)
+# #svm_classifier_2 = SVC(kernel='rbf', gamma=0.8, C=0.5)
+#
+# # Train each SVM classifier
+# svm_classifier_1.fit(X_train, y_train)
+# svm_classifier_2.fit(X_train, y_train)
+# svm_classifier_3.fit(X_train, y_train)
+#
+# # Predictions for each classifier
+# svm_predictions_1 = svm_classifier_1.predict(X_test)
+# svm_predictions_2 = svm_classifier_2.predict(X_test)
+# svm_predictions_3 = svm_classifier_3.predict(X_test)
+# # Calculate accuracy for each classifier
+# svm_accuracy_1 = accuracy_score(y_test, svm_predictions_1)
+# svm_accuracy_2 = accuracy_score(y_test, svm_predictions_2)
+# svm_accuracy_3 = accuracy_score(y_test, svm_predictions_3)
+#
+# # Print accuracies
+# print("Support Vector Machine (SVM) Classifier 1 Accuracy:", svm_accuracy_1 * 100)
+# print("Support Vector Machine (SVM) Classifier 2 Accuracy:", svm_accuracy_2 * 100)
+# print("Support Vector Machine (SVM) Classifier 3 Accuracy:", svm_accuracy_3 * 100)
+# print("---------------------------------------------------------------------------------------")
+#
+# # Define base models
+# base_models = [
 #     ('dt_1', dt_classifier_1),
 #     ('dt_2', dt_classifier_2),
 #     ('dt_3', dt_classifier_3),
@@ -337,15 +431,115 @@ print("Stacking Ensemble Accuracy:", stacking_accuracy * 100)
 #     ('svm_3', svm_classifier_3)
 # ]
 #
-# stacking_clf = StackingClassifier(
-#     estimators=estimators,
-#     final_estimator=LogisticRegression()  # Meta-classifier
-# )
+# # Combine accuracies for SVM models
+# svm_accuracy_avg = (svm_accuracy_1 + svm_accuracy_2 + svm_accuracy_3) / 3
 #
-# stacking_clf.fit(X_train, y_train)
-# stacking_predictions = stacking_clf.predict(X_test)
+# # Combine accuracies for GBM models
+# gbm_accuracy_avg = (gbm_accuracy_1 + gbm_accuracy_2 + gbm_accuracy_3) / 3
+#
+# # Combine accuracies for Decision Tree models
+# dt_accuracy_avg = (dt_accuracy_1 + dt_accuracy_2 + dt_accuracy_3) / 3
+#
+# # Calculate total accuracy
+# total_accuracy = svm_accuracy_avg + gbm_accuracy_avg + dt_accuracy_avg
+#
+# # Compute weights based on normalized accuracies
+# weights = {
+#     'svm_1': svm_accuracy_avg / total_accuracy,
+#     'svm_2': svm_accuracy_avg / total_accuracy,
+#     'svm_3': svm_accuracy_avg / total_accuracy,
+#     'gbm_1': gbm_accuracy_avg / total_accuracy,
+#     'gbm_2': gbm_accuracy_avg / total_accuracy,
+#     'gbm_3': gbm_accuracy_avg / total_accuracy,
+#     'dt_1': dt_accuracy_avg / total_accuracy,
+#     'dt_2': dt_accuracy_avg / total_accuracy,
+#     'dt_3': dt_accuracy_avg / total_accuracy
+# }
+# # Initialize weighted voting ensemble with weights
+# weighted_voting_ensemble = VotingClassifier(estimators=base_models, voting='hard', weights=list(weights.values()))
+#
+# # Train weighted voting ensemble
+# weighted_voting_ensemble.fit(X_train, y_train)
+#
+# # Predictions from weighted voting ensemble
+# weighted_voting_predictions = weighted_voting_ensemble.predict(X_test)
+#
+# # Calculate accuracy for weighted voting ensemble
+# weighted_voting_accuracy = accuracy_score(y_test, weighted_voting_predictions)
+# print("Weighted Voting Ensemble Accuracy:", weighted_voting_accuracy * 100)
+#
+# #Initialize weighted stacking ensemble with weights
+# stacking_ensemble = StackingClassifier(estimators=base_models,
+#                                        stack_method='auto',
+#                                        passthrough=True,
+#                                        final_estimator=KNeighborsClassifier())
+#
+# # Train stacking ensemble
+# stacking_ensemble.fit(X_train, y_train)
+#
+# # Predictions from stacking ensemble
+# stacking_predictions = stacking_ensemble.predict(X_test)
+#
+# # Calculate accuracy for stacking ensemble
 # stacking_accuracy = accuracy_score(y_test, stacking_predictions)
-# print("Stacking Classifier Accuracy:", stacking_accuracy * 100)
+# print("Stacking Ensemble Accuracy:", stacking_accuracy * 100)
+#
+# # Define base models
+# base_models = [
+#     ('dt_1', dt_classifier_1),
+#     ('dt_2', dt_classifier_2),
+#     ('dt_3', dt_classifier_3),
+#     ('gbm_1', gbm_classifier_1),
+#     ('gbm_2', gbm_classifier_2),
+#     ('gbm_3', gbm_classifier_3)
+# ]
+#
+# # Combine accuracies for GBM models
+# gbm_accuracy_avg = (gbm_accuracy_1 + gbm_accuracy_2 + gbm_accuracy_3) / 3
+#
+# # Combine accuracies for Decision Tree models
+# dt_accuracy_avg = (dt_accuracy_1 + dt_accuracy_2 + dt_accuracy_3) / 3
+#
+# # Calculate total accuracy
+# total_accuracy = gbm_accuracy_avg + dt_accuracy_avg
+# # Compute weights based on normalized accuracies
+# weights = {
+#     'gbm_1': gbm_accuracy_avg / total_accuracy,
+#     'gbm_2': gbm_accuracy_avg / total_accuracy,
+#     'gbm_3': gbm_accuracy_avg / total_accuracy,
+#     'dt_1': dt_accuracy_avg / total_accuracy,
+#     'dt_2': dt_accuracy_avg / total_accuracy,
+#     'dt_3': dt_accuracy_avg / total_accuracy
+# }
+# # Initialize weighted voting ensemble with weights
+# weighted_voting_ensemble = VotingClassifier(estimators=base_models, voting='hard', weights=list(weights.values()))
+#
+# # Train weighted voting ensemble
+# weighted_voting_ensemble.fit(X_train, y_train)
+#
+# # Predictions from weighted voting ensemble
+# weighted_voting_predictions = weighted_voting_ensemble.predict(X_test)
+#
+#
+# # Calculate accuracy for weighted voting ensemble
+# weighted_voting_accuracy = accuracy_score(y_test, weighted_voting_predictions)
+# print("Weighted Voting Ensemble Accuracy :", weighted_voting_accuracy * 100)
+#
+# #Initialize weighted stacking ensemble with weights
+# stacking_ensemble = StackingClassifier(estimators=base_models,
+#                                        stack_method='auto',
+#                                        passthrough=True,
+#                                        final_estimator=KNeighborsClassifier())
+#
+# # Train stacking ensemble
+# stacking_ensemble.fit(X_train, y_train)
+#
+# # Predictions from stacking ensemble
+# stacking_predictions = stacking_ensemble.predict(X_test)
+#
+# # Calculate accuracy for stacking ensemble
+# stacking_accuracy = accuracy_score(y_test, stacking_predictions)
+# print("Stacking Ensemble Accuracy:", stacking_accuracy * 100)
 
 
 
